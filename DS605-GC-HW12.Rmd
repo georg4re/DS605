@@ -29,9 +29,17 @@ The attached `who.csv` dataset contains real-world data from 2008. The variables
 **GovtExp:** mean government expenditures per capita on healthcare, US dollars at average exchange rate\
 **TotExp:** sum of personal and government expenditures.\
 
+```{r}
+who <- read.csv("https://raw.githubusercontent.com/georg4re/DS605/main/data/who.csv")
+summary(who)
+```
+
 # 1. ScatterPlot
 Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met.
 
+```{r}
+
+```
 
 # 2. Which Model is Better? 
 Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"

@@ -908,6 +908,75 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
     
     
+        <style type="text/css">code{white-space: pre;}</style>
+    <style type="text/css">
+      code.sourceCode > span { display: inline-block; line-height: 1.25; }
+      code.sourceCode > span { color: inherit; text-decoration: inherit; }
+      code.sourceCode > span:empty { height: 1.2em; }
+      .sourceCode { overflow: visible; }
+      code.sourceCode { white-space: pre; position: relative; }
+      div.sourceCode { margin: 1em 0; }
+      pre.sourceCode { margin: 0; }
+      @media screen {
+      div.sourceCode { overflow: auto; }
+      }
+      @media print {
+      code.sourceCode { white-space: pre-wrap; }
+      code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+      }
+      pre.numberSource code
+        { counter-reset: source-line 0; }
+      pre.numberSource code > span
+        { position: relative; left: -4em; counter-increment: source-line; }
+      pre.numberSource code > span > a:first-child::before
+        { content: counter(source-line);
+          position: relative; left: -1em; text-align: right; vertical-align: baseline;
+          border: none; display: inline-block;
+          -webkit-touch-callout: none; -webkit-user-select: none;
+          -khtml-user-select: none; -moz-user-select: none;
+          -ms-user-select: none; user-select: none;
+          padding: 0 4px; width: 4em;
+          background-color: #ffffff;
+          color: #a0a0a0;
+        }
+      pre.numberSource { margin-left: 3em; border-left: 1px solid #a0a0a0;  padding-left: 4px; }
+      div.sourceCode
+        { color: #1f1c1b; background-color: #ffffff; }
+      @media screen {
+      code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+      }
+      code span. { color: #1f1c1b; } /* Normal */
+      code span.al { color: #bf0303; background-color: #f7e6e6; font-weight: bold; } /* Alert */
+      code span.an { color: #ca60ca; } /* Annotation */
+      code span.at { color: #0057ae; } /* Attribute */
+      code span.bn { color: #b08000; } /* BaseN */
+      code span.bu { color: #644a9b; font-weight: bold; } /* BuiltIn */
+      code span.cf { color: #1f1c1b; font-weight: bold; } /* ControlFlow */
+      code span.ch { color: #924c9d; } /* Char */
+      code span.cn { color: #aa5500; } /* Constant */
+      code span.co { color: #898887; } /* Comment */
+      code span.cv { color: #0095ff; } /* CommentVar */
+      code span.do { color: #607880; } /* Documentation */
+      code span.dt { color: #0057ae; } /* DataType */
+      code span.dv { color: #b08000; } /* DecVal */
+      code span.er { color: #bf0303; text-decoration: underline; } /* Error */
+      code span.ex { color: #0095ff; font-weight: bold; } /* Extension */
+      code span.fl { color: #b08000; } /* Float */
+      code span.fu { color: #644a9b; } /* Function */
+      code span.im { color: #ff5500; } /* Import */
+      code span.in { color: #b08000; } /* Information */
+      code span.kw { color: #1f1c1b; font-weight: bold; } /* Keyword */
+      code span.op { color: #1f1c1b; } /* Operator */
+      code span.ot { color: #006e28; } /* Other */
+      code span.pp { color: #006e28; } /* Preprocessor */
+      code span.re { color: #0057ae; background-color: #e0e9f8; } /* RegionMarker */
+      code span.sc { color: #3daee9; } /* SpecialChar */
+      code span.ss { color: #ff5500; } /* SpecialString */
+      code span.st { color: #bf0303; } /* String */
+      code span.va { color: #0057ae; } /* Variable */
+      code span.vs { color: #bf0303; } /* VerbatimString */
+      code span.wa { color: #bf0303; } /* Warning */
+    </style>
     
     
     <!-- tabsets -->
@@ -1046,6 +1115,29 @@ document.addEventListener('DOMContentLoaded', function() {
 <strong>GovtExp:</strong> mean government expenditures per capita on healthcare, US dollars at average exchange rate<br />
 <strong>TotExp:</strong> sum of personal and government expenditures.<br />
 </p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>who &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;https://raw.githubusercontent.com/georg4re/DS605/main/data/who.csv&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">summary</span>(who)</span></code></pre></div>
+<pre><code>##    Country             LifeExp      InfantSurvival   Under5Survival  
+##  Length:190         Min.   :40.00   Min.   :0.8350   Min.   :0.7310  
+##  Class :character   1st Qu.:61.25   1st Qu.:0.9433   1st Qu.:0.9253  
+##  Mode  :character   Median :70.00   Median :0.9785   Median :0.9745  
+##                     Mean   :67.38   Mean   :0.9624   Mean   :0.9459  
+##                     3rd Qu.:75.00   3rd Qu.:0.9910   3rd Qu.:0.9900  
+##                     Max.   :83.00   Max.   :0.9980   Max.   :0.9970  
+##      TBFree           PropMD              PropRN             PersExp       
+##  Min.   :0.9870   Min.   :0.0000196   Min.   :0.0000883   Min.   :   3.00  
+##  1st Qu.:0.9969   1st Qu.:0.0002444   1st Qu.:0.0008455   1st Qu.:  36.25  
+##  Median :0.9992   Median :0.0010474   Median :0.0027584   Median : 199.50  
+##  Mean   :0.9980   Mean   :0.0017954   Mean   :0.0041336   Mean   : 742.00  
+##  3rd Qu.:0.9998   3rd Qu.:0.0024584   3rd Qu.:0.0057164   3rd Qu.: 515.25  
+##  Max.   :1.0000   Max.   :0.0351290   Max.   :0.0708387   Max.   :6350.00  
+##     GovtExp             TotExp      
+##  Min.   :    10.0   Min.   :    13  
+##  1st Qu.:   559.5   1st Qu.:   584  
+##  Median :  5385.0   Median :  5541  
+##  Mean   : 40953.5   Mean   : 41696  
+##  3rd Qu.: 25680.2   3rd Qu.: 26331  
+##  Max.   :476420.0   Max.   :482750</code></pre>
 </div>
 <div id="scatterplot" class="section level1">
 <h1>1. ScatterPlot</h1>
