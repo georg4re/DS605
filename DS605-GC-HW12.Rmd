@@ -108,16 +108,126 @@ The $R^2$ tells us that this model accounts for only **25.77%** of the variation
 
 
 # 2. Which Model is Better? 
-Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
+Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6).\
+Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06).\
+
+```{r}
+who_2 <- who %>%
+  mutate(TotExp = TotExp^0.06,
+         LifeExp = LifeExp^4.6)
+```
+
+Plot LifeExp^4.6 as a function of TotExp^.06, and re-run the simple regression model using the transformed variables.\
+
+```{r}
+ggplot(who_2, aes(x = TotExp, y = LifeExp)) + 
+  geom_point() + 
+  geom_smooth(method='lm', formula= y~x)
+```
+
+```{r, echo=FALSE}
+model2 <- lm(LifeExp ~ TotExp, data = who_2)
+summary(model2)
+```
+
+```{r, echo=FALSE}
+
+  par(mfrow=c(2,2))
+
+  #Linearity
+  plot(fitted(model2),
+     resid(model2),
+     main = "Residuals vs Fitted", 
+     xlab = "Fitted Values", 
+     ylab = "Residuals",
+     col = '#009587')
+  abline(h=0, lty = 2)
+
+  #Normality of Residuals
+  qqnorm(resid(model2), 
+       col = '#009587')
+  qqline(resid(model2), 
+       lty = 2)
+
+  #Variablity
+  hist(resid(model2), 
+     breaks=30, 
+     prob=TRUE,
+     main = "Histogram: Residuals", 
+     xlab = "Residuals", 
+     ylab = "Density",
+     col = '#009587')
+  curve(dnorm(x, 
+            mean=mean(resid(model2)), 
+            sd=sd(resid(model2))), 
+      lty = 2, 
+      add = TRUE)
+
+  #Independence of Errors
+  plot(resid(model2), 
+     main="Residuals",
+     ylab = "Residuals",
+     col = '#009587')
+  abline(h = 0, 
+       lty = 2)
+  abline(h = sd(resid(model2)),
+         lty = 3)
+  abline(h = -sd(resid(model2)),
+         lty = 3)
+
+```
+
+**Provide and interpret the F statistics, R^2, standard error, and p-values.**\
+
+- **F Statistics & P-value:** the value is *507.7* with p-value very close to zero, which means there is significant evidence that the current model is better than the initial model. If we recall that the original model's `F-statistic` was *65.26*, we can assume this is a better model.\
+- **$R^2$:** around 73% of the variability of the data can be explained by the current model vs 26% with the initial one.\
+- **Standard error:** the standard error is way larger than the initial model's.  Not entirely sure what that means\
+
+
+**Which model is "better?"**
+
+The second model is a better one.  It accounts for 73% of the variability.  The distribution of the residuals is nearly normal and independent.
 
 
 # 3. Forecast 
-Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life expectancy when TotExp^.06=2.5.
+Using the results from 3, forecast life expectancy when $TotExp^.06 =1.5$. 
+
+```{r}
+at_1.5 <- (-736527910 + 620060216 * 1.5) ^ (1/4.6)
+
+paste("Life Expectancy when Tot Exp = 1.5 is: ", at_1.5)
+```
+
+Then forecast life expectancy when $TotExp^.06=2.5$
+
+```{r}
+at_2.5 <- (-736527910 + 620060216 * 2.5) ^ (1/4.6)
+
+paste("Life Expectancy when Tot Exp = 2.5 is: ", at_2.5)
+```
 
 
 # 4. Build Models.
 Build the following multiple regression model and interpret the F Statistics, R^2, standard error, and p-values. How good is the model?
 $LifeExp = b_0+b_1 * PropMd + b_2 * TotExp + b_3 * PropMD * TotExp$
 
+```{r}
+model3 <- lm(LifeExp ~ PropMD + TotExp + PropMD*TotExp , who)
+summary(model3)
+```
+
+- **F Statistics & P-value:** the value is *34.49* with p-value close to zero, the `F-statistic` is lower than the original model's which was *65.26*.\
+- **$R^2$:** around 36% of the variability of the data can be explained by the current model vs 26% with the initial one.\
+- **Standard error:** the residual standard error is 8.765, smaller than the initial model's.\
+
+Overall, this model seems better than the initial one but not as good as the transformed model.
+
+
 # 5. Forecast LifeExp 
 when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+
+```{r}
+62.77 + (1497 * 0.03) + (0.00007233 * 14) - (0.006026 * (0.03 * 14))
+```
+
+We saw that as the Total Expenditure increases, so does the life expectancy.  That said, 107 appears to be a little high and unrealistic.  Only two countries have a PropMD of 0.03 or higher and their TotExp are way higher than 14.  The fact that these countries have LifeExp around 80 seem to imply that this proyection is totally unrealistic. 
