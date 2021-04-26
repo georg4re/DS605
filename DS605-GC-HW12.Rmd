@@ -12,6 +12,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gridExtra)
 ```
 
 # Introduction to Data 
@@ -34,12 +36,76 @@ who <- read.csv("https://raw.githubusercontent.com/georg4re/DS605/main/data/who.
 summary(who)
 ```
 
-# 1. ScatterPlot
+# 1. ScatterPlot and Initial Linear Regression
 Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss whether the assumptions of simple linear regression met.
 
 ```{r}
-
+ggplot(who, aes(x = TotExp, y = LifeExp)) + 
+  geom_point() + 
+  geom_smooth(method='lm', formula= y~x)
 ```
+
+```{r}
+le_te_lm <- lm(LifeExp ~ TotExp, data = who)
+summary(le_te_lm)
+```
+
+The `F-statistic` is *65.26* with a p-value close to 0 gives us an indication of a significant relationship between Total Expenditure and Life Expectancy.\
+The $R^2$ tells us that this model accounts for only **25.77%** of the variation of the data.
+
+```{r, echo=FALSE}
+
+  par(mfrow=c(2,2))
+
+  #Linearity
+  plot(fitted(le_te_lm),
+     resid(le_te_lm),
+     main = "Residuals vs Fitted", 
+     xlab = "Fitted Values", 
+     ylab = "Residuals",
+     col = '#009587')
+  abline(h=0, lty = 2)
+
+  #Normality of Residuals
+  qqnorm(resid(le_te_lm), 
+       col = '#009587')
+  qqline(resid(le_te_lm), 
+       lty = 2)
+
+  #Variablity
+  hist(resid(le_te_lm), 
+     breaks=30, 
+     prob=TRUE,
+     main = "Histogram: Residuals", 
+     xlab = "Residuals", 
+     ylab = "Density",
+     col = '#009587')
+  curve(dnorm(x, 
+            mean=mean(resid(le_te_lm)), 
+            sd=sd(resid(le_te_lm))), 
+      lty = 2, 
+      add = TRUE)
+
+  #Independence of Errors
+  plot(resid(le_te_lm), 
+     main="Residuals",
+     ylab = "Residuals",
+     col = '#009587')
+  abline(h = 0, 
+       lty = 2)
+  abline(h = sd(resid(le_te_lm)),
+         lty = 3)
+  abline(h = -sd(resid(le_te_lm)),
+         lty = 3)
+```
+
+**Are the assumptions met?**
+
+1. The residuals appear to be randomly distributed on the plot.\
+2. Most of the residuals fall on the theoretical normal line.\
+3. According to the histogram, the distribution of the residuals is slightly left skewed short long tails.\
+4. The variation of the residuals appears to be constant accross the model and the residuals are independent from each other.
+
 
 # 2. Which Model is Better? 
 Raise life expectancy to the 4.6 power (i.e., LifeExp^4.6). Raise total expenditures to the 0.06 power (nearly a log transform, TotExp^.06). Plot LifeExp^4.6 as a function of TotExp^.06, and r re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R^2, standard error, and p-values. Which model is "better?"
