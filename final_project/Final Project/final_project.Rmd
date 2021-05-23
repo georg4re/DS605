@@ -1,0 +1,554 @@
+---
+title: "Final Project"
+author: "George Cruz"
+date: "5/20/2021"
+output: rmdformats::readthedown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+library(tidyverse)
+library(here)  #provides easy path resolution
+```
+
+# Problem I
+
+## Generate Random Variables
+Using R, generate a random variable X that has 10,000 random uniform numbers from 1 to N, where N can be any number of your choosing greater than or equal to 6.  Then generate a random variable Y that has 10,000 random normal numbers with a mean of \[ \mu = \sigma = \frac{N+1}{2} \].  
+
+### Generating X
+
+Let's generate the random variable X and visualize it in a nice histogram.
+```{r }
+N <- 42   #The Answer to the Universe, life and everything.
+avg <- (N+1)/2
+
+X <- runif(10000,1,N)
+
+Y <- rnorm(10000, mean= avg)
+
+```
+
+```{r, echo=FALSE}
+dat_x <- data.frame(value=X)
+
+ggplot(dat_x, aes(x=value)) + 
+    geom_histogram(aes(y=..density..),      # Histogram with density instead of count on y-axis
+                   binwidth=.5,
+                   colour="black", fill="white") +
+    geom_density(alpha=.2, fill="firebrick4") + # Overlay with transparent density plot
+    geom_vline(aes(xintercept=mean(value, na.rm=T)),   # Ignore NA values for mean
+               color="blue", linetype="dashed", size=1)
+
+```
+
+Well, maybe not so nice. 
+
+### Generating Y
+
+Let's generate the Normal variable Y and visualize it as well. 
+
+```{r}
+avg <- (N+1)/2
+
+Y <- rnorm(10000, mean= avg, sd=avg)
+```
+
+```{r, echo=FALSE}
+dat_y <- data.frame(value=Y)
+
+ggplot(dat_y, aes(x=value)) + 
+    geom_histogram(aes(y=..density..),      # Histogram with density instead of count on y-axis
+                   binwidth=1,
+                   colour="black", fill="darkred") +
+    geom_density(alpha=.3, fill="white")  + # Overlay with transparent density plot
+    geom_vline(aes(xintercept=mean(value, na.rm=T)),   # Ignore NA values for mean
+               color="blue", linetype="dashed", size=1)
+```
+
+A little better. We can also take a look at this **normal distribution** as a boxplot:
+
+```{r}
+# A basic box with the conditions colored
+ggplot(dat_y, aes(y=value, fill=value)) + geom_boxplot() + scale_x_discrete()
+```
+
+
+## Probability.   
+
+Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  Interpret the meaning of all probabilities.
+
+```{r}
+x <- median(X)
+y <- quantile(Y, probs = .25, names= FALSE)
+```
+
+### a. P(X>x | X>y)
+
+We need to calculate the probability that the value of X is greater than the median when it is greater than the 1st quantile of the normal distribution. In other words \[ P(X>x|X>y) = \frac{P(X>x and X>y)}{P(X>y)} \]
+
+```{r}
+#let condition = X[X>y]  
+#Values in X where X > y
+condition <- X[X>y]
+
+#both_conditions: cases where both conditions are true
+both_conditions <- condition[condition>x]
+
+prob_a <- length(both_conditions) / length(condition)
+prob_a
+
+```
+```{r}
+library(vistributions) #allows us to visualize distributions. 
+
+p <- vdist_normal_perc(prob_a, mean(condition), sd(condition), 'upper', print_plot = FALSE)
+#Change the subtitle so it makes sense
+p$labels$subtitle=paste("P(X > x | X > y) =", round(100*prob_a, 2), "%")
+p
+```
+
+
+There is a $`r paste(round(100*prob_a, 2), "%", sep="")`$% Probability that X > than the median when X is greater than the first quantile of the normal distribution.
+
+
+### b. P(X>x, Y>y)		
+We need to calculate the probability that a value of X is greater than the median **AND** that a value of Y is greater than the 1st quantile of the normal distribution.
+
+\[ P(X>x) = 50\% = 0.5 \]
+
+\[ P(Y>y) = 75\% = 0.75 \]
+
+Therefore $P(X>x, Y>y) = P(X>x) * P(Y > y) = 0.5 * 0.75 = 37.5\% $
+
+```{r}
+
+0.5 * 0.75
+```
+
+```{r}
+p <- vdist_normal_perc(.375, mean = mean(X), sd = sd(X), print_plot = FALSE)
+#Change the subtitle so it makes sense
+p$labels$subtitle=paste("P(X > x, Y > y) = 37.5%")
+p
+```
+
+
+### c. P(X<x | X>y)	
+We need to calculate the probability that the value of X is less than the median when it is greater than the 1st quantile of the normal distribution. In other words \[ P(X<x|X>y) = \frac{P(X<x and X>y)}{P(X>y)} \]
+
+This should be equal to $1-P(X>x|X>y)$ which we calculated in *a*.
+
+```{r}
+#let condition = X[X>y]  
+#Values in X where X > y
+# condition <- X[X>y]
+
+#both_conditions: cases where both conditions are true
+both_conditions2 <- condition[condition<x]
+
+prob_c <- length(both_conditions2) / length(condition)
+prob_c
+
+```
+
+There is about $`r paste(round(100*prob_c, 2), "%", sep="")`$% Probability that a value of X is less than the median when X is greater than the first quantile of the normal distribution. Which is the same as: 
+
+```{r}
+1 - prob_a
+```
+
+```{r}
+p <- vdist_normal_perc(prob_c, mean(condition), sd(condition), 'lower', print_plot = FALSE)
+#Change the subtitle so it makes sense
+p$labels$subtitle=paste("P(X < x | X > y) =", round(100*prob_c, 2), "%")
+p
+```
+
+
+## Investigate 
+Investigate whether P(X>x and Y>y)=P(X>x)P(Y>y) by building a table and evaluating the marginal and joint probabilities.
+
+### P(X>x)
+By definition the probability of a value of X being greater than its median is 50%.
+
+```{r}
+knitr::kable(prop.table(table(X>x)))
+```
+
+### P(Y>y)
+If y is the first quantile, the probability of a value of Y to be greater than y is 75%
+```{r}
+knitr::kable(prop.table(table(Y>y)))
+```
+
+
+```{r}
+totals_table <- table(X > x, Y > y)
+colnames(totals_table) = c("Y < y", "Y > y")
+rownames(totals_table)[rownames(totals_table) == FALSE] = "X < x"
+rownames(totals_table)[rownames(totals_table) == TRUE] = "X > x"
+
+knitr::kable(prop.table(totals_table))
+
+```
+
+If we look at the bottom-right corner, which corresponds to P(X > x, Y > y) we see that it is $0.3727$ or $37.3\%$ 
+
+```{r}
+
+(0.5 * 0.75)
+
+```
+
+The result of the multiplication is $37.5\%$.  I suspect the difference is due to rounding. 
+
+## Independence Test
+Check to see if independence holds by using Fisher’s Exact Test and the Chi Square Test.  
+
+### Fisher’s Exact Test
+$H_0=$ Variables are independent 
+$H_1=$ Variables are dependent. 
+```{r}
+fisher.test(totals_table)
+```
+
+Because the p-value is greater than 0.05 we cannot reject the null hypothesis.  The variables are independent. 
+
+### Chi Square Test.  
+
+$H_0=$ Variables are independent 
+$H_1=$ Variables are dependent. 
+
+```{r}
+chisq.test(totals_table)
+```
+
+The p-value is greater than 0.05 so we do not reject the null hypothesis. 
+
+### What is the difference between the two? Which is most appropriate?
+From the output from both tests we see that the p-value is greater than the significance level of 5%. Like any other statistical test, if the 
+p-value is greater than the significance level, we cannot reject the null hypothesis. In our context, not rejecting the null hypothesis for the Fisher’s exact test of independence means that these two variables are independent. 
+
+Fisher's exact test of independence is widely used when the sample sizes are small.  In this case, I would recommend the Chi-Squared test. 
+
+### A picture is worth a thousand words:
+
+```{r}
+my_data = data.frame('X'=X, 'Y'=Y)
+my_data %>% ggplot(aes(x=X,y=Y)) +
+  geom_point(alpha=0.5) +
+  labs(x= "Random Distribution", y="Normal Distribution")+
+  geom_smooth()
+```
+
+There appears to be no relation between these two variables. 
+
+# Problem II
+You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  https://www.kaggle.com/c/house-prices-advanced-regression-techniques .  I want you to do the following.
+
+## Descriptive and Inferential Statistics. 
+Provide univariate descriptive statistics and appropriate plots for the training data set. 
+```{r}
+# I really like the describe function
+library(Hmisc)  
+train_df <- read_csv(here("data","train.csv"))
+
+dim(train_df)
+```
+
+The Training Data Set has 1460 observations of the following 81 variables: 
+
+```{r}
+head(describe(train_df, "Training Data Set"))
+```
+
+```{r}
+head(str(train_df))
+```
+
+### Scatterplot 
+Provide a scatterplot matrix for at least two of the independent variables and the dependent variable. 
+
+```{r}
+pairs(~ LotArea + GarageCars + YrSold + SalePrice, data = train_df, main = "Sale Price", col="brown4")
+```
+
+### Correlation Matrix 
+Derive a correlation matrix for any three quantitative variables in the dataset.  
+
+```{r}
+#To plot the correlation
+library(ggcorrplot)
+
+#get the correlation
+train_cor <- train_df %>%
+  select( LotArea, GarageCars, SalePrice) %>%
+  cor()
+
+#get the p.mat
+p.mat <- train_df %>%
+  select( LotArea, GarageCars, SalePrice) %>% 
+    cor_pmat()
+
+ggcorrplot(train_cor, 
+           ggtheme = ggplot2::theme_gray, 
+           lab = TRUE, 
+           p.mat = p.mat,
+           colors = c("#6D9EC1", "white", "#E46726"))
+```
+
+### Hypothesis test
+Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval.  
+
+**LotArea vs SalePrice**
+
+$H_0$: Correlation between variables is zero
+$H_1$: Correlation is not zero
+
+```{r}
+cor.test(train_df$LotArea, train_df$SalePrice, method = 'pearson', conf.level = 0.8)
+```
+
+**GarageCars vs SalePrice**
+
+$H_0$: Correlation between variables is zero
+$H_1$: Correlation is not zero
+
+```{r}
+cor.test(train_df$GarageCars, train_df$SalePrice, method = 'pearson', conf.level = 0.8)
+```
+
+**Discuss the meaning of your analysis.**
+Both p-values are very close to 0 for each of the variables tested: LotArea and GarageCars.  Because neither p-value is greater than 0.05, being essentially zero, we reject both null hypotheses and must accept the alternate hypothesis that **True correlation is not equal to 0**
+
+
+**Would you be worried about familywise error? Why or why not?**
+No.  The p-values are too low for us to worry about False discoveries or Type I errors. 
+
+
+## Linear Algebra and Correlation.
+Let's perform some operations on the correlation Matrix we obtained earlier. 
+
+### Invert 
+Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) 
+
+**Correlation Matrix**
+```{r}
+train_cor %>% round()
+```
+
+**Inverted Matrix**
+```{r}
+library(matlib)
+precision_matrix <- solve(train_cor)  #Could also use matlib::Ginv but loses the labels
+precision_matrix %>% round()
+```
+
+### Multiply
+Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. 
+
+**Correlation Matrix * Precision Matrix**
+
+```{r}
+product_matrix <- train_cor %*% precision_matrix
+product_matrix %>% round()
+```
+
+**Precision * Correlation**
+
+```{r}
+product_matrix_2 <- precision_matrix %*% train_cor
+product_matrix_2 %>% round()
+```
+
+### LU Decomposition
+Conduct LU decomposition on the matrix.  
+
+```{r}
+lu <- LU(train_cor)
+lu
+```
+
+
+**Verify**
+```{r}
+with(lu, L %*% U) #check that A = L * U
+```
+
+## Calculus-Based Probability & Statistics.  
+Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.  
+
+```{r}
+min(train_df$SalePrice)
+```
+
+Minimum Saleprice is $34,900. It will need to be shifted. 
+
+Let's take a look at the histogram: 
+```{r}
+train_df %>% ggplot(aes(SalePrice)) + 
+    geom_histogram(colour="black", fill="darkred")+ 
+    geom_vline(aes(xintercept=mean(SalePrice, na.rm=T)),   # Ignore NA values for mean
+        color="blue", linetype="dashed", size=1)
+```
+
+It is skewed to the right. 
+
+**Shift it if necessary**
+```{r}
+shifted_train <- train_df %>% 
+    mutate(SalePrice = SalePrice - 34900)
+
+min(shifted_train$SalePrice)
+```
+
+Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  
+
+```{r}
+library(MASS)
+fit_saleprice <- fitdistr(shifted_train$SalePrice, 
+                             densfun = "exponential")
+fit_saleprice
+```
+**Optimal Value of $\lambda$**
+Find the optimal value of $\lambda$ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, $\lambda$)).  
+
+`fitdistr` returns an object, `fit_saleprice` in this case, which contains an `estimate` value that is the optimal value for this distribution. 
+
+```{r}
+fit_sample <- rexp(1000, fit_saleprice$estimate)
+```
+
+**Plot a histogram and compare it with a histogram of your original variable.**
+```{r}
+DF <- rbind(data.frame(dataset="Fitted", SalePrice=fit_sample),
+            data.frame(dataset="Original", SalePrice=train_df$SalePrice))
+DF$dataset <- as.factor(DF$dataset)
+
+ggplot(DF, aes(x=SalePrice, fill=dataset)) +
+  geom_histogram( colour="black", position="dodge") +
+  scale_fill_manual( values=c("darkred","magenta"))
+
+```
+
+The generated Sample, labeled `fitted` appears to be more right-skewed (as expected since we shifted it) but otherwise similar in shape and spread. 
+
+**Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).**
+
+```{r}
+quantile(fit_sample, c(0.05, 0.95))
+```
+
+**Also generate a 95% confidence interval from the empirical data, assuming normality.**
+```{r}
+res <- t.test(fit_sample)
+res$conf.int
+```
+
+Finally, provide the empirical 5th percentile and 95th percentile of the data.  
+```{r}
+quantile(train_df$SalePrice, c(.05, .95))
+
+```
+
+```{r}
+res2 <- t.test(train_df$SalePrice)
+res2$conf.int
+
+```
+**Discuss.**
+The fit sample appears to have lower boundaries than the Original SalePrice.  This can be due to underfitting and also to the fact that we shifted the values to the right prior to fitting. The later appears to be more the case as the difference in the CI appears to be around the 34,900 value we removed from SalePrice when performing the shift. 
+
+## Modeling.  
+Build some type of multiple regression  model and submit your model to the competition board.  Provide your complete model summary and results with analysis.  Report your Kaggle.com user name and score.
+
+### Linear Regression Model
+```{r}
+model <- lm(log(SalePrice) ~ GarageCars + LotArea + YrSold + Neighborhood + BldgType + YearBuilt, data = train_df)
+summary(model)
+```
+
+This model gives us an $R^2$ of 0.702 which means it accounts for 70% of the value of SalePrice.  We could potentially adjust it a little more. 
+
+**Testing the Model**
+
+```{r}
+predicted_df <- read.csv(here("data","test.csv"))
+
+predicted_df$SalePrice <- predict(model, predicted_df)
+
+submission <- predicted_df %>% 
+    dplyr::select(Id, SalePrice) %>% 
+    mutate( SalePrice = ifelse(is.na(SalePrice), 0, SalePrice))
+
+write.csv(submission, here("data","GC-Submission.csv"), row.names=FALSE)
+```
+
+
+### Kaggle Submission Score Info
+
+Kaggle UserName: George Cruz Deschamps
+Initial Score: 9.46108
+
+
+### Scaling the numerical features 
+I noticed that I only really have one numerical data: `LotArea`, every other variable I'm using is categorical.  Let me add a couple of numerical variables and scale them to prevent them adversely influencing the modeling process. 
+
+```{r}
+
+library(caret)
+numerical_variables <- c( 'LotArea',
+                          'LotFrontage',
+                          'TotalBsmtSF')
+pre_proc_val <- preProcess(train_df[,numerical_variables], 
+                           method = c("center", "scale"))
+
+train_df_scaled <- train_df
+train_df_scaled[,numerical_variables] <- predict(pre_proc_val,
+                                                 train_df[,numerical_variables])
+
+model2 <- lm(log(SalePrice) ~ GarageCars + 
+                 LotArea + 
+                 LotFrontage + 
+                 TotalBsmtSF + 
+                 YrSold + 
+                 Neighborhood + 
+                 BldgType + 
+                 YearBuilt, data = train_df_scaled)
+summary(model2)
+
+```
+
+This is a little better @ 75% $R^2$
+
+Let's see how it fares in the competition.
+
+```{r}
+predicted_df2 <- read.csv(here("data","test.csv"))
+
+predicted_df2$SalePrice <- predict(model2, predicted_df2)
+
+submission2 <- predicted_df2 %>% 
+    dplyr::select(Id, SalePrice) %>% 
+    mutate( SalePrice = ifelse(is.na(SalePrice), 0, SalePrice))
+
+write.csv(submission2, here("data","GC-Submission2.csv"), row.names=FALSE)
+```
+
+
+### 2nd Kaggle Submission Score Info
+
+Kaggle UserName: George Cruz Deschamps
+Initial Score: 7.2548
+
+### Conclusion
+
+Adding those variables and scaling them improved the model a little.  I would like to try other regression models like:
+
+- Ridge Regression 
+- LASSO Regression and 
+- Elastic Net
+
+I did try them on my project to no avail.  Need a little more research before I am able to pull those off. 
+
